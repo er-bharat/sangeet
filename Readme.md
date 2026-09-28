@@ -9,7 +9,8 @@ i wanted something modern looking so i implemented waveform progressbar in it.
 TBH this was the sole reason i wrote this new music player.  
 
 ## Screenshots
-<img width="1199" height="797" alt="screenshot-20260928-121557" src="https://github.com/user-attachments/assets/492ed02e-bf7f-4c89-a3fb-47599fd3dfcf" />
+<img width="1204" height="802" alt="screenshot-1790591055" src="https://github.com/user-attachments/assets/991970a0-8426-4745-a7f3-0b974bf32129" />
+
 <img width="1198" height="801" alt="screenshot-20260928-121544" src="https://github.com/user-attachments/assets/e30e9675-2737-4e94-bf45-a75af260defd" />
 
 
