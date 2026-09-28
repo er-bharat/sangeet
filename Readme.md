@@ -8,6 +8,12 @@ strawberry has a feature called moodbar which i liked from aimp age but strawber
 i wanted something modern looking so i implemented waveform progressbar in it.  
 TBH this was the sole reason i wrote this new music player.  
 
+## Screenshots
+<img width="1199" height="797" alt="screenshot-20260928-121557" src="https://github.com/user-attachments/assets/492ed02e-bf7f-4c89-a3fb-47599fd3dfcf" />
+<img width="1198" height="801" alt="screenshot-20260928-121544" src="https://github.com/user-attachments/assets/e30e9675-2737-4e94-bf45-a75af260defd" />
+
+
+
 ## Features
 + lazy load and sql db makes it near instant start even on first load.
 + can open file from file manager auto gets all the album songs to in same player view.
