@@ -307,13 +307,15 @@ static QList<LyricLine> parseLyricText(const QString &text)
 static QList<LyricLine> plainLyrics(const QString &text)
 {
     QList<LyricLine> result;
-    qint64 position = 0;
+
     for (const QString &line : text.split('\n')) {
         const QString trimmed = line.trimmed();
-        if (trimmed.isEmpty()) continue;
-        result.append({position, trimmed});
-        position += 1000;
+        if (trimmed.isEmpty())
+            continue;
+        
+        result.append({-1, trimmed});
     }
+    
     return result;
 }
 
@@ -510,14 +512,41 @@ void PlayerPage::createLyrics(QHBoxLayout *content)
     m_window->m_lyrics->setWordWrap(true);
     m_window->m_lyrics->setTextElideMode(Qt::ElideNone);
     m_window->m_lyrics->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    m_window->m_lyrics->verticalScrollBar()->setSingleStep(8);
     m_window->m_lyrics->setAttribute(Qt::WA_TranslucentBackground);
     m_window->m_lyrics->setStyleSheet(R"(
-        QListWidget { background: transparent; border: none; outline: none; padding: 8px 4px; }
-        QListWidget::item { background: transparent; border: none; padding: 8px 4px; color: palette(text); }
-        QListWidget::item:selected { background: transparent; color: #4da3ff; font-weight: 700; }
-        QScrollBar:vertical { width: 8px; margin: 0; background: transparent; }
-        QScrollBar::handle:vertical { min-height: 30px; background: rgba(150,150,150,140); border-radius: 4px; }
-        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical, QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; height: 0; }
+    QListWidget {
+        background: transparent;
+        border: none;
+        outline: none;
+        padding: 8px 4px;
+    }
+
+    QListWidget::item {
+        background: transparent;
+        border: none;
+        padding: 8px 4px;
+    }
+
+    QScrollBar:vertical {
+        width: 8px;
+        margin: 0;
+        background: transparent;
+    }
+
+    QScrollBar::handle:vertical {
+        min-height: 30px;
+        background: rgba(150,150,150,140);
+        border-radius: 4px;
+    }
+
+    QScrollBar::add-line:vertical,
+    QScrollBar::sub-line:vertical,
+    QScrollBar::add-page:vertical,
+    QScrollBar::sub-page:vertical {
+        background: transparent;
+        height: 0;
+    }
     )");
     emit m_window->lyricsFontUpdateRequested();
     layout->addWidget(m_window->m_lyrics, 1);
@@ -1245,24 +1274,52 @@ void PlayerPage::centerLyricItem(int itemIndex)
 
 void PlayerPage::updateLyrics(qint64 position)
 {
-    if (m_window->m_lyricsData.isEmpty()) return;
+    if (m_window->m_lyricsData.isEmpty())
+        return;
+    
     int active = -1;
+    
     for (int i = 0; i < m_window->m_lyricsData.size(); ++i) {
-        if (m_window->m_lyricsData[i].position <= position) active = i;
-        else break;
+        const qint64 lyricPosition = m_window->m_lyricsData[i].position;
+        
+        if (lyricPosition < 0)
+            continue;
+        
+        if (lyricPosition <= position)
+            active = i;
+        else
+            break;
     }
-    if (active < 0 || active >= m_window->m_lyricsData.size() || active == m_window->m_activeLyric) return;
+    
+    if (active < 0 ||
+        active >= m_window->m_lyricsData.size() ||
+        active == m_window->m_activeLyric)
+        return;
+    
     const int itemIndex = active + 1;
-    if (m_window->m_activeLyric >= 0 && m_window->m_activeLyric < m_window->m_lyricsData.size()) {
-        QFont normalFont = m_window->m_lyrics->item(m_window->m_activeLyric + 1)->font();
-        normalFont.setBold(false);
-        m_window->m_lyrics->item(m_window->m_activeLyric + 1)->setFont(normalFont);
-    }
-    QFont activeFont = m_window->m_lyrics->item(itemIndex)->font();
-    activeFont.setBold(true);
-    m_window->m_lyrics->item(itemIndex)->setFont(activeFont);
-    m_window->m_activeLyric = active;
-    QTimer::singleShot(0, m_window, [this, itemIndex]() { centerLyricItem(itemIndex); });
+    const QPalette palette = m_window->m_lyrics->palette();
+    
+    if (m_window->m_activeLyric >= 0 &&
+        m_window->m_activeLyric < m_window->m_lyricsData.size()) {
+        
+        auto *item = m_window->m_lyrics->item(m_window->m_activeLyric + 1);
+    QFont font = item->font();
+    font.setBold(false);
+    item->setFont(font);
+    item->setForeground(palette.color(QPalette::Text));
+        }
+        
+        auto *item = m_window->m_lyrics->item(itemIndex);
+        QFont font = item->font();
+        font.setBold(true);
+        item->setFont(font);
+        item->setForeground(palette.color(QPalette::Highlight));
+        
+        m_window->m_activeLyric = active;
+        
+        QTimer::singleShot(0, m_window, [this, itemIndex]() {
+            centerLyricItem(itemIndex);
+        });
 }
 
 QString PlayerPage::formatTime(qint64 milliseconds)
