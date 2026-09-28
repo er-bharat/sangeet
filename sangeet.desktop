@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Sangeet
+GenericName=Music Player
+Comment=Stop and Listen to full Album & Playlist instead of hunting next song.
+Exec=sangeet %F
+Icon=/usr/local/share/icons/hicolor/scalable/apps/sangeet.svg
+Terminal=false
+StartupNotify=true
+StartupWMClass=Sangeet
+Categories=AudioVideo;Audio;Player;
+MimeType=audio/mpeg;audio/flac;audio/ogg;audio/wav;audio/x-wav;audio/mp4;audio/aac;audio/x-m4a;audio/webm;audio/x-opus+ogg;application/x-mpegurl;audio/x-mpegurl;

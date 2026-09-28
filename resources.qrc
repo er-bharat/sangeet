@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>sangeet.svg</file>
+    </qresource>
+</RCC>
