@@ -85,6 +85,7 @@ public:
     void centerLyricItem(int itemIndex);
     void updateLyrics(qint64 position);
     QString formatTime(qint64 milliseconds);
+    QString m_currentLoudnessPath;
 
 private:
     void createPlayerHeader(QGridLayout *top);

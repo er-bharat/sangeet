@@ -860,28 +860,41 @@ void PlayerPage::cycleRepeatMode()
 void PlayerPage::playTrack(int index)
 {
     if (index < 0 || index >= m_window->m_currentAlbum.tracks.size()) return;
+    
     m_window->m_currentTrack = index;
     m_window->m_trackEnded = false;
+    
     const Track &track = m_window->m_currentAlbum.tracks[index];
+    m_currentLoudnessPath = track.path;
+    
     m_window->m_trackTitle->setText(track.title);
     m_window->m_trackArtist->setText(track.artist);
-    m_window->m_artWidget->setCurrentTrack(m_window->m_playbackFromPlaylist ? m_window->m_playbackQueueIndex : index);
+    m_window->m_artWidget->setCurrentTrack(
+        m_window->m_playbackFromPlaylist
+        ? m_window->m_playbackQueueIndex
+        : index);
     m_window->m_artWidget->showTrackListTemporarily();
+    
     m_window->m_lyricsData = loadLyrics(track.path);
     populateLyrics();
+    
     if (m_waveform) {
         showLoudness(track.path);
         requestLoudness(track.path);
     }
     
     preloadLoudness();
+    
     const QByteArray path = track.path.toUtf8();
     const char *command[] = {"loadfile", path.constData(), "replace", nullptr};
     mpv_command_async(m_window->m_mpv, 0, command);
+    
     int pause = 0;
     mpv_set_property(m_window->m_mpv, "pause", MPV_FORMAT_FLAG, &pause);
+    
     m_window->m_isPlaying = true;
-    m_window->m_playButton->setIcon(QIcon::fromTheme("media-playback-pause"));
+    m_window->m_playButton->setIcon(
+        QIcon::fromTheme("media-playback-pause"));
     m_window->m_playButton->setToolTip("Pause");
 }
 
@@ -1024,13 +1037,12 @@ void PlayerPage::preloadLoudness()
 
 void PlayerPage::showLoudness(const QString &path)
 {
-    if (!m_waveform)
+    if (!m_waveform || path != m_currentLoudnessPath)
         return;
     
     QMutexLocker lock(&m_loudnessMutex);
     
-    const auto it =
-    m_loudnessCache.constFind(path);
+    const auto it = m_loudnessCache.constFind(path);
     
     if (it != m_loudnessCache.constEnd())
         m_waveform->setData(it.value());
