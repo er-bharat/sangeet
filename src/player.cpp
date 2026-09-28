@@ -1,7 +1,7 @@
 #include "player.h"
 #include "mainwindow.h"
 #include "tracks.h"
-
+#include <algorithm>
 #include <QFontMetrics>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -367,6 +367,17 @@ public:
     void setData(const std::vector<double> &peak)
     {
         m_peak = peak;
+        
+        const double maxPeak = m_peak.empty()
+        ? 0.0
+        : *std::max_element(m_peak.begin(), m_peak.end());
+        
+        if (maxPeak > 1e-6) {
+            const double gain = 1.0 / maxPeak;
+            for (double &v : m_peak)
+                v = qBound(0.0, v * gain, 1.0);
+        }
+        
         update();
     }
     
@@ -807,12 +818,14 @@ void PlayerPage::toggleShuffle()
         shuffleAlbum();
     }
     m_window->m_artWidget->setShuffleState(m_window->m_shuffleEnabled);
+    m_window->m_artWidget->showTrackListTemporarily();
 }
 
 void PlayerPage::cycleRepeatMode()
 {
     m_window->m_repeatMode = (m_window->m_repeatMode + 1) % 3;
     m_window->m_artWidget->setRepeatMode(m_window->m_repeatMode);
+    m_window->m_artWidget->showTrackListTemporarily();
 }
 
 void PlayerPage::playTrack(int index)

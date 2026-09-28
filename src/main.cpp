@@ -594,6 +594,27 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             return QMainWindow::eventFilter(watched, event);
 
         auto *key = static_cast<QKeyEvent *>(event);
+        
+        if (key->modifiers() == Qt::ControlModifier) {
+            switch (key->key()) {
+                case Qt::Key_1:
+                    m_tracksController->setNavigationPage(false, false);
+                    m_stack->setCurrentWidget(m_albumsPage);
+                    m_albumsController->scheduleGridRebuild();
+                    return true;
+                    
+                case Qt::Key_2:
+                    m_playlistsController->showPlaylistsPage();
+                    return true;
+                    
+                case Qt::Key_3:
+                    m_tracksController->showTracksPage(QString());
+                    return true;
+                    
+                default:
+                    break;
+            }
+        }
 
         if (m_stack->currentWidget() == m_tracksPage && m_tracksTable &&
             (watched == m_tracksTable || watched == m_tracksTable->viewport())) {
@@ -701,6 +722,20 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         }
 
         if (m_stack->currentWidget() == m_playerPage) {
+            if (key->modifiers() == Qt::ControlModifier) {
+                switch (key->key()) {
+                    case Qt::Key_S:
+                        m_playerPageController->toggleShuffle();
+                        return true;
+                        
+                    case Qt::Key_R:
+                        m_playerPageController->cycleRepeatMode();
+                        return true;
+                        
+                    default:
+                        break;
+                }
+            }
             switch (key->key()) {
             case Qt::Key_Up:
                 m_playerPageController->previousTrack();
@@ -727,6 +762,8 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
                 m_stack->setCurrentWidget(m_albumsPage);
                 m_albumsController->scheduleGridRebuild();
                 return true;
+                
+            
 
             default:
                 break;
