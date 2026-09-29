@@ -381,18 +381,18 @@ m_builtinPresets(Eq::builtinPresets())
     resize(920, 480);
     
     // ---- top row: preset list | enable | save preset ----------------------
+    m_enableCheck = new QCheckBox(tr("on"));
+    m_enableCheck->setToolTip(tr("Turn the equalizer on or off"));
+    
     m_presetBox = new QComboBox;
     m_presetBox->setMinimumWidth(220);
-    
-    m_enableCheck = new QCheckBox(tr("enable"));
-    m_enableCheck->setToolTip(tr("Turn the equalizer on or off"));
     
     m_saveButton = new QPushButton(tr("Save preset…"));
     
     auto *top = new QHBoxLayout;
+    top->addWidget(m_enableCheck);
     top->addWidget(new QLabel(tr("Preset")));
     top->addWidget(m_presetBox, 1);
-    top->addWidget(m_enableCheck);
     top->addWidget(m_saveButton);
     
     // ---- left: vertical preamp -------------------------------------------
