@@ -43,51 +43,86 @@
 #include <QMetaObject>
 #include <QThreadPool>
 #include <QMutexLocker>
+
 PlayerArtWidget::PlayerArtWidget(QWidget *parent) : QWidget(parent)
 {
     setMouseTracking(true);
     setAttribute(Qt::WA_Hover, true);
-
+    
+    const QPalette palette = this->palette();
+    const QColor base = palette.color(QPalette::Base);
+    const QColor text = palette.color(QPalette::Text);
+    const QColor highlight = palette.color(QPalette::Highlight);
+    
     m_art = new QLabel(this);
     m_art->setAlignment(Qt::AlignCenter);
-    m_art->setStyleSheet("background: black;");
-
+    m_art->setAutoFillBackground(true);
+    
+    QPalette artPalette = m_art->palette();
+    artPalette.setColor(QPalette::Window, base);
+    m_art->setPalette(artPalette);
+    
     m_tracks = new QListWidget(this);
+    
     m_tracks->setStyleSheet(
-        "QListWidget { background: rgba(0,0,0,220); color: white; border: none; padding: 6px; }"
-        "QListWidget::item { padding: 8px; }"
-        "QListWidget::item:selected { background: rgba(255,255,255,45); }");
+        QString(
+            "QListWidget {"
+            "background: %1;"
+            "color: %2;"
+            "border: none;"
+            "padding: 6px;"
+            "}"
+            "QListWidget::item {"
+            "padding: 8px;"
+            "}"
+            "QListWidget::item:selected {"
+            "background: %3;"
+            "}")
+        .arg(
+            QColor(base.red(), base.green(), base.blue(), 220)
+            .name(QColor::HexArgb),
+             text.name(),
+             QColor(highlight.red(), highlight.green(), highlight.blue(), 45)
+             .name(QColor::HexArgb)));
+    
     m_tracks->hide();
     m_tracks->setMouseTracking(true);
-
+    
     m_shuffleButton = new QToolButton(this);
     m_repeatButton = new QToolButton(this);
+    
     for (QToolButton *button : {m_shuffleButton, m_repeatButton}) {
-        button->setAutoRaise(true);
+        button->setAutoRaise(false);
         button->setCursor(Qt::PointingHandCursor);
-        button->setIconSize(QSize(22, 22));
-        button->setStyleSheet(
-            "QToolButton { background: rgba(0,0,0,180); border: none; border-radius: 6px; padding: 6px; }"
-            "QToolButton:hover { background: rgba(255,255,255,45); }");
+        button->setIconSize(QSize(42, 42));
     }
-    m_shuffleButton->setIcon(QIcon::fromTheme("media-playlist-shuffle", QIcon::fromTheme("media-playlist-shuffle-symbolic")));
-    m_repeatButton->setIcon(QIcon::fromTheme("media-playlist-repeat", QIcon::fromTheme("media-playlist-repeat-symbolic")));
+    
+    m_shuffleButton->setIcon(QIcon::fromTheme("media-playlist-shuffle"));
+    m_repeatButton->setIcon(QIcon::fromTheme("media-playlist-repeat"));
+    
     m_shuffleButton->setToolTip("Shuffle: Off");
     m_repeatButton->setToolTip("Repeat: Off");
+    
     m_shuffleButton->hide();
     m_repeatButton->hide();
-
-    connect(m_shuffleButton, &QToolButton::clicked, this, &PlayerArtWidget::shuffleClicked);
-    connect(m_repeatButton, &QToolButton::clicked, this, &PlayerArtWidget::repeatClicked);
+    
+    connect(m_shuffleButton, &QToolButton::clicked,
+            this, &PlayerArtWidget::shuffleClicked);
+    
+    connect(m_repeatButton, &QToolButton::clicked,
+            this, &PlayerArtWidget::repeatClicked);
+    
     connect(&m_hideTimer, &QTimer::timeout, this, [this]() {
         if (!underMouse() && !m_tracks->underMouse())
             hideOverlays();
     });
+    
     m_hideTimer.setSingleShot(true);
-
-    connect(m_tracks, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
-        emit trackSelected(item->data(Qt::UserRole).toInt());
-    });
+    
+    connect(m_tracks, &QListWidget::itemClicked,
+            this, [this](QListWidgetItem *item) {
+                emit trackSelected(item->data(Qt::UserRole).toInt());
+            });
 }
 
 void PlayerArtWidget::setArtwork(const QString &path)
@@ -134,27 +169,59 @@ void PlayerArtWidget::showTrackListTemporarily()
 void PlayerArtWidget::setShuffleState(bool enabled)
 {
     m_shuffleButton->setToolTip(enabled ? "Shuffle: On" : "Shuffle: Off");
-    m_shuffleButton->setStyleSheet(enabled
-        ? "QToolButton { background: rgba(77,163,255,180); border: none; border-radius: 6px; padding: 6px; } QToolButton:hover { background: rgba(77,163,255,220); }"
-        : "QToolButton { background: rgba(0,0,0,180); border: none; border-radius: 6px; padding: 6px; } QToolButton:hover { background: rgba(255,255,255,45); }");
+    
+    QIcon icon = QIcon::fromTheme("media-playlist-shuffle");
+    
+    if (enabled) {
+        QPixmap pixmap = icon.pixmap(42, 42);
+        
+        QPainter painter(&pixmap);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        painter.fillRect(
+            pixmap.rect(),
+                         m_shuffleButton->palette().color(QPalette::Highlight));
+        
+        m_shuffleButton->setIcon(QIcon(pixmap));
+    } else {
+        m_shuffleButton->setIcon(icon);
+    }
 }
 
 void PlayerArtWidget::setRepeatMode(int mode)
 {
     QString tooltip;
     QString iconName = "media-playlist-repeat";
-    if (mode == 1) tooltip = "Repeat: All";
-    else if (mode == 2) { tooltip = "Repeat: One"; iconName = "media-playlist-repeat-song"; }
-    else tooltip = "Repeat: Off";
-
+    
+    if (mode == 1) {
+        tooltip = "Repeat: All";
+    } else if (mode == 2) {
+        tooltip = "Repeat: One";
+        iconName = "media-playlist-repeat-song";
+    } else {
+        tooltip = "Repeat: Off";
+    }
+    
     QIcon icon = QIcon::fromTheme(iconName);
-    if (icon.isNull()) icon = QIcon::fromTheme("media-playlist-repeat");
+    
+    if (icon.isNull())
+        icon = QIcon::fromTheme("media-playlist-repeat");
+    
     m_repeatButton->setIcon(icon);
     m_repeatButton->setToolTip(tooltip);
-    m_repeatButton->setStyleSheet(mode != 0
-        ? "QToolButton { background: rgba(77,163,255,180); border: none; border-radius: 6px; padding: 6px; } QToolButton:hover { background: rgba(77,163,255,220); }"
-        : "QToolButton { background: rgba(0,0,0,180); border: none; border-radius: 6px; padding: 6px; } QToolButton:hover { background: rgba(255,255,255,45); }");
+    
+    if (mode != 0) {
+        QPixmap pixmap = icon.pixmap(42, 42);
+        
+        QPainter painter(&pixmap);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        painter.fillRect(
+            pixmap.rect(),
+                         m_repeatButton->palette().color(QPalette::Highlight));
+        
+        m_repeatButton->setIcon(QIcon(pixmap));
+    }
 }
+
 
 void PlayerArtWidget::resizeEvent(QResizeEvent *event)
 {
@@ -188,7 +255,7 @@ void PlayerArtWidget::updateArtwork()
     m_art->setGeometry(rect);
     m_tracks->setGeometry(rect.x(), rect.y() + rect.height() / 2, rect.width(), rect.height() / 2);
 
-    const int buttonSize = 34;
+    const int buttonSize = 50;
     const int margin = qMax(8, rect.width() / 60);
     m_shuffleButton->setGeometry(rect.x() + margin, rect.y() + margin, buttonSize, buttonSize);
     m_repeatButton->setGeometry(rect.right() - buttonSize - margin, rect.y() + margin, buttonSize, buttonSize);
@@ -705,30 +772,30 @@ void PlayerPage::setBackgroundArtwork(const QString &path)
         m_background->clear();
         return;
     }
-
+    
     QPixmap pixmap(path);
-
+    
     if (pixmap.isNull()) {
         m_background->clear();
         return;
     }
-
+    
     pixmap = pixmap.scaled(
         m_background->size(),
-        Qt::KeepAspectRatioByExpanding,
-        Qt::SmoothTransformation);
-
+                           Qt::KeepAspectRatioByExpanding,
+                           Qt::SmoothTransformation);
+    
     const QColor windowColor =
-        m_background->palette().color(QPalette::Window);
-
+    m_background->palette().color(QPalette::Window);
+    
     const QColor overlay =
-        windowColor.lightness() > 128
-            ? QColor(255, 255, 255, 150)
-            : QColor(0, 0, 0, 150);
-
+    windowColor.lightness() > 128
+    ? QColor(255, 255, 255, 150)
+    : QColor(0, 0, 0, 150);
+    
     QPainter painter(&pixmap);
     painter.fillRect(pixmap.rect(), overlay);
-
+    
     m_background->setPixmap(pixmap);
 }
 
