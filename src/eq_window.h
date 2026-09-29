@@ -9,6 +9,7 @@ class QComboBox;
 class QLabel;
 class QPushButton;
 class QSlider;
+class QCheckBox;
 
 // The interactive frequency/gain plot.
 //   double-click empty space : add a dot (then keep dragging to place it)
@@ -74,7 +75,7 @@ private:
     Eq::PresetList m_builtinPresets;
 
     QComboBox *m_presetBox = nullptr;
-    QPushButton *m_enableButton = nullptr;
+    QCheckBox *m_enableCheck = nullptr;
     QPushButton *m_saveButton = nullptr;
     QSlider *m_preamp = nullptr;
     QLabel *m_preampValue = nullptr;
