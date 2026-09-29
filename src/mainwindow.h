@@ -20,6 +20,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QFileInfo>
+#include <QByteArray>
 
 #include "scanning.h"
 #include <mpv/client.h>
@@ -83,6 +84,29 @@ public:
         QSettings settings(configPath(), QSettings::IniFormat);
         settings.setValue("progressBarMode", mode);
         settings.sync();
+    }
+    
+    QByteArray eqStateJson() const
+    {
+        QSettings s(configPath(), QSettings::IniFormat);
+        return QByteArray::fromBase64(s.value("equalizer/state").toString().toLatin1());
+    }
+    void saveEqStateJson(const QByteArray &json) const
+    {
+        QSettings s(configPath(), QSettings::IniFormat);
+        s.setValue("equalizer/state", QString::fromLatin1(json.toBase64()));
+        s.sync();
+    }
+    QByteArray eqPresetsJson() const
+    {
+        QSettings s(configPath(), QSettings::IniFormat);
+        return QByteArray::fromBase64(s.value("equalizer/userPresets").toString().toLatin1());
+    }
+    void saveEqPresetsJson(const QByteArray &json) const
+    {
+        QSettings s(configPath(), QSettings::IniFormat);
+        s.setValue("equalizer/userPresets", QString::fromLatin1(json.toBase64()));
+        s.sync();
     }
 
 private:

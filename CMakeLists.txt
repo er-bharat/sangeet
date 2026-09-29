@@ -36,6 +36,9 @@ add_executable(sangeet
     src/player.cpp
     src/player.h
     src/loudness_graph.h
+    src/eq_engine.h
+    src/eq_window.cpp
+    src/eq_window.h
     resources.qrc
 )
 

@@ -1,4 +1,5 @@
 #include "player.h"
+#include "eq_window.h"
 #include "mainwindow.h"
 #include "tracks.h"
 #include <algorithm>
@@ -624,6 +625,19 @@ void PlayerPage::createPlayerControls(QVBoxLayout *root)
 {
     auto *controls = new QHBoxLayout;
     
+    auto *eqButton = new QToolButton;
+    eqButton->setIcon(QIcon::fromTheme("multimedia-equalizer"));
+    if (eqButton->icon().isNull()) {
+        eqButton->setText("EQ");
+        eqButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    } else {
+        eqButton->setIconSize(QSize(24, 24));
+    }
+    eqButton->setToolTip("Equalizer");
+    eqButton->setAutoRaise(true);
+    QObject::connect(eqButton, &QToolButton::clicked, m_window, [this]() { showEqualizer(); });
+    controls->addWidget(eqButton);
+    
     auto *timeLabel = new ClickableTimeLabel("0:00");
     m_window->m_currentTime = timeLabel;
     timeLabel->setToolTip("waveform/normal bar");
@@ -673,6 +687,7 @@ void PlayerPage::createPlayerControls(QVBoxLayout *root)
     controls->addWidget(m_window->m_currentTime);
     controls->addWidget(m_progressStack, 1);
     controls->addWidget(m_window->m_duration);
+    
     controls->addWidget(m_window->m_playButton);
     
     root->addLayout(controls);
@@ -1348,7 +1363,49 @@ bool PlayerPage::initializeMpv()
         QMessageBox::critical(m_window, "libmpv Error", "Could not configure libmpv:\n\n" + error);
         return false;
     }
+    initializeEqualizer();
     return true;
+}
+
+void PlayerPage::initializeEqualizer()
+{
+    bool ok = false;
+    const Eq::State saved = Eq::stateFromJson(m_window->m_settings.eqStateJson(), &ok);
+    if (ok) m_eqState = saved;
+    m_eqUserPresets = Eq::presetsFromJson(m_window->m_settings.eqPresetsJson());
+    
+    // Restore the saved EQ before the first track plays.
+    Eq::MpvBridge::apply(m_window->m_mpv, m_eqState, Eq::Change::Structure);
+}
+
+void PlayerPage::showEqualizer()
+{
+    if (!m_eqWindow) {
+        m_eqWindow = new EqualizerWindow(m_eqState, m_eqUserPresets, m_window);
+        
+        m_eqSaveTimer = new QTimer(m_window);
+        m_eqSaveTimer->setSingleShot(true);
+        m_eqSaveTimer->setInterval(400);   // debounce writes while dragging
+        QObject::connect(m_eqSaveTimer, &QTimer::timeout, m_window, [this]() {
+            m_window->m_settings.saveEqStateJson(Eq::stateToJson(m_eqState));
+        });
+        
+        QObject::connect(m_eqWindow, &EqualizerWindow::stateChanged, m_window,
+                         [this](const Eq::State &s, Eq::Change change, int band) {
+                             m_eqState = s;
+                             Eq::MpvBridge::apply(m_window->m_mpv, s, change, band);
+                             m_eqSaveTimer->start();
+                         });
+        
+        QObject::connect(m_eqWindow, &EqualizerWindow::userPresetsChanged, m_window,
+                         [this](const Eq::PresetList &presets) {
+                             m_eqUserPresets = presets;
+                             m_window->m_settings.saveEqPresetsJson(Eq::presetsToJson(presets));
+                         });
+    }
+    m_eqWindow->show();
+    m_eqWindow->raise();
+    m_eqWindow->activateWindow();
 }
 
 void PlayerPage::updateLyricsFont()

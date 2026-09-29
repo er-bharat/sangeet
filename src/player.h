@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <QWidget>
 #include "scanning.h"
+#include "eq_engine.h"
 #include <QHash>
 #include <QMutex>
 #include <QSet>
@@ -19,6 +20,7 @@ class QLabel;
 class QToolButton;
 class QStackedWidget;
 class LoudnessProgressWidget;
+class EqualizerWindow;
 
 class PlayerArtWidget : public QWidget
 {
@@ -32,6 +34,7 @@ public:
     void showTrackListTemporarily();
     void setShuffleState(bool enabled);
     void setRepeatMode(int mode);
+    
 
 signals:
     void trackSelected(int index);
@@ -55,6 +58,7 @@ private:
     QTimer m_hideTimer;
     QPixmap m_pixmap;
     bool m_streamFallback = false;
+    
 };
 
 class PlayerPage
@@ -86,6 +90,8 @@ public:
     void updateLyrics(qint64 position);
     QString formatTime(qint64 milliseconds);
     QString m_currentLoudnessPath;
+    void initializeEqualizer();
+    void showEqualizer();
 
 private:
     void createPlayerHeader(QGridLayout *top);
@@ -110,4 +116,9 @@ private:
     QHash<QString, std::vector<double>> m_loudnessCache;
     QSet<QString> m_loudnessPending;
     QMutex m_loudnessMutex;
+    
+    Eq::State m_eqState;
+    Eq::PresetList m_eqUserPresets;
+    EqualizerWindow *m_eqWindow = nullptr;
+    QTimer *m_eqSaveTimer = nullptr;
 };
