@@ -103,6 +103,10 @@ private:
     LoudnessProgressWidget *m_waveform = nullptr;
     QStackedWidget *m_progressStack = nullptr;
     
+    void setBackgroundArtwork(const QString &path);
+    QLabel *m_background = nullptr;
+    QPixmap m_backgroundPixmap;
+    
     QHash<QString, std::vector<double>> m_loudnessCache;
     QSet<QString> m_loudnessPending;
     QMutex m_loudnessMutex;

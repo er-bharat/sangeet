@@ -19,7 +19,7 @@
 #include <QSlider>
 #include <QEnterEvent>
 #include <QListWidgetItem>
-
+#include <QGraphicsBlurEffect>
 #include <algorithm>
 #include <clocale>
 
@@ -645,9 +645,29 @@ void PlayerPage::connectPlayerSignals()
 void PlayerPage::createPlayerPage()
 {
     m_window->m_playerPage = new QWidget;
-    auto *root = new QVBoxLayout(m_window->m_playerPage);
+    
+    auto *overlay = new QGridLayout(m_window->m_playerPage);
+    overlay->setContentsMargins(0, 0, 0, 0);
+    overlay->setSpacing(0);
+    
+    m_background = new QLabel;
+    m_background->setAlignment(Qt::AlignCenter);
+    m_background->setScaledContents(true);
+    m_background->setAttribute(Qt::WA_TransparentForMouseEvents);
+    m_background->setMinimumSize(1, 1);
+    m_background->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    
+    auto *blur = new QGraphicsBlurEffect(m_background);
+    blur->setBlurRadius(35);
+    m_background->setGraphicsEffect(blur);
+    
+    overlay->addWidget(m_background, 0, 0);
+    
+    auto *content = new QWidget;
+    auto *root = new QVBoxLayout(content);
     root->setContentsMargins(15, 15, 15, 15);
     root->setSpacing(10);
+    
     auto *top = new QGridLayout;
     top->setContentsMargins(0, 0, 0, 0);
     top->setColumnStretch(0, 1);
@@ -655,18 +675,61 @@ void PlayerPage::createPlayerPage()
     top->setColumnStretch(2, 1);
     createPlayerHeader(top);
     root->addLayout(top);
-    auto *content = new QHBoxLayout;
-    content->setContentsMargins(0, 0, 0, 0);
-    content->setSpacing(0);
+    
+    auto *playerContent = new QHBoxLayout;
+    playerContent->setContentsMargins(0, 0, 0, 0);
+    playerContent->setSpacing(0);
+    
     m_window->m_artWidget = new PlayerArtWidget;
-    m_window->m_artWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    content->addWidget(m_window->m_artWidget, 1);
-    createLyrics(content);
-    root->addLayout(content, 1);
+    m_window->m_artWidget->setSizePolicy(
+        QSizePolicy::Expanding,
+        QSizePolicy::Expanding);
+    
+    playerContent->addWidget(m_window->m_artWidget, 1);
+    createLyrics(playerContent);
+    
+    root->addLayout(playerContent, 1);
     createPlayerControls(root);
+    
+    overlay->addWidget(content, 0, 0);
+    
     connectPlayerSignals();
+    
     m_window->m_artWidget->setShuffleState(false);
     m_window->m_artWidget->setRepeatMode(0);
+}
+
+void PlayerPage::setBackgroundArtwork(const QString &path)
+{
+    if (path.isEmpty()) {
+        m_background->clear();
+        return;
+    }
+
+    QPixmap pixmap(path);
+
+    if (pixmap.isNull()) {
+        m_background->clear();
+        return;
+    }
+
+    pixmap = pixmap.scaled(
+        m_background->size(),
+        Qt::KeepAspectRatioByExpanding,
+        Qt::SmoothTransformation);
+
+    const QColor windowColor =
+        m_background->palette().color(QPalette::Window);
+
+    const QColor overlay =
+        windowColor.lightness() > 128
+            ? QColor(255, 255, 255, 150)
+            : QColor(0, 0, 0, 150);
+
+    QPainter painter(&pixmap);
+    painter.fillRect(pixmap.rect(), overlay);
+
+    m_background->setPixmap(pixmap);
 }
 
 void PlayerPage::openPlaylist(const Playlist &playlist, int trackIndex)
@@ -699,11 +762,13 @@ void PlayerPage::playPlaylistQueueTrack(int queueIndex, const Playlist &playlist
         m_window->m_currentAlbum = m_window->m_albums[ref.albumIndex];
         m_window->m_currentTrack = ref.trackIndex;
         m_window->m_artWidget->setArtwork(m_window->m_currentAlbum.artwork);
+        setBackgroundArtwork(m_window->m_currentAlbum.artwork);
     } else {
         m_window->m_currentAlbum = Album{};
         m_window->m_currentAlbum.name = playlist.name;
         m_window->m_currentAlbum.tracks = {track};
         m_window->m_artWidget->setArtwork(QString());
+        setBackgroundArtwork(QString());
     }
     m_window->m_artWidget->setStreamFallback(track.path.startsWith("http://", Qt::CaseInsensitive) || track.path.startsWith("https://", Qt::CaseInsensitive));
     playTrack(m_window->m_currentTrack);
@@ -726,6 +791,7 @@ void PlayerPage::openAlbum(const Album &album, int trackIndex, bool fromTracks)
     m_window->m_backToAlbums->setText(fromTracks ? "← Tracks" : "← All Albums");
     m_window->m_albumName->setText(album.name.isEmpty() ? "Unknown Album" : album.name);
     m_window->m_artWidget->setArtwork(album.artwork);
+    setBackgroundArtwork(album.artwork);
     m_window->m_artWidget->setStreamFallback(false);
     m_window->m_artWidget->setTracks(album.tracks);
     playTrack(trackIndex);
@@ -747,6 +813,7 @@ void PlayerPage::playQueueTrack(int queueIndex)
     m_window->m_backToAlbums->setText("← Tracks");
     m_window->m_albumName->setText(album.name.isEmpty() ? "Unknown Album" : album.name);
     m_window->m_artWidget->setArtwork(album.artwork);
+    setBackgroundArtwork(album.artwork);
     m_window->m_artWidget->setStreamFallback(false);
     m_window->m_artWidget->setTracks(album.tracks);
     playTrack(ref.trackIndex);
