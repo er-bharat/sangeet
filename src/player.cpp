@@ -1036,7 +1036,7 @@ void PlayerPage::playTrack(int index)
     
     QString title = track.title;
     
-    if (!m_window->m_settings.alsaCardName().trimmed().isEmpty() && track.frequency > 0)
+    if (m_window->m_settings.alsaEnabled() && track.frequency > 0)
         title += "  " + QString::number(track.frequency / 1000.0, 'f', 1) + " kHz";
     
     m_window->m_trackTitle->setText(title);
@@ -1408,6 +1408,61 @@ bool PlayerPage::initializeMpv()
     }
     initializeEqualizer();
     return true;
+}
+
+void PlayerPage::restartMpv()
+{
+    if (!m_window->m_mpv)
+        return;
+
+    const QString path = m_currentLoudnessPath;
+    const bool paused = !m_window->m_isPlaying;
+
+    double position = 0.0;
+    mpv_get_property(
+        m_window->m_mpv,
+        "time-pos",
+        MPV_FORMAT_DOUBLE,
+        &position);
+
+    mpv_terminate_destroy(m_window->m_mpv);
+    m_window->m_mpv = nullptr;
+
+    if (!initializeMpv())
+        return;
+
+    if (path.isEmpty())
+        return;
+
+    const QByteArray file = QFile::encodeName(path);
+
+    const char *cmd[] = {
+        "loadfile",
+        file.constData(),
+        nullptr
+    };
+
+    mpv_command(m_window->m_mpv, cmd);
+
+    if (position > 0.0) {
+        const QString pos = QString::number(position, 'f', 3);
+        const QByteArray value = pos.toUtf8();
+
+        const char *seek[] = {
+            "seek",
+            value.constData(),
+            "absolute",
+            "exact",
+            nullptr
+        };
+
+        mpv_command(m_window->m_mpv, seek);
+    }
+
+    if (paused) {
+        const char *pauseCmd[] = {"set", "pause", "yes", nullptr};
+        mpv_command(m_window->m_mpv, pauseCmd);
+    }
 }
 
 void PlayerPage::initializeEqualizer()
