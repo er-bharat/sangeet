@@ -132,10 +132,37 @@ void FolderSelect::createStartContent(QVBoxLayout *layout)
         alsaRow->setContentsMargins(0, 0, 0, 0);
         alsaRow->setSpacing(8);
         
+        auto *alsaCheck = new QCheckBox("ALSA");
+        alsaCheck->setCursor(Qt::PointingHandCursor);
+        
         auto *alsa = new QLineEdit;
         alsa->setPlaceholderText("ALSA card name");
         alsa->setText(m_window->m_settings.alsaCardName());
         alsa->setFixedWidth(220);
+        
+        auto *alsaHelp = new QToolButton;
+        alsaHelp->setText("🛈");
+        alsaHelp->setAutoRaise(true);
+        alsaHelp->setCursor(Qt::PointingHandCursor);
+        alsaHelp->setToolTip(
+            "Run aplay -L in terminal for listing all ALSA cards.\n"
+            "Used for bypassing PipeWire for bit-perfect output.");
+        alsaHelp->setFixedSize(28, 28);
+        
+        const bool hasAlsa = !alsa->text().trimmed().isEmpty();
+        
+        alsaCheck->setChecked(hasAlsa && m_window->m_settings.alsaEnabled());
+        alsaCheck->setEnabled(hasAlsa);
+        
+        QObject::connect(alsa, &QLineEdit::textChanged, m_window,
+                         [alsaCheck, alsaHelp](const QString &text) {
+                             const bool enabled = !text.trimmed().isEmpty();
+                             alsaCheck->setEnabled(enabled);
+                             alsaHelp->setEnabled(enabled);
+                             
+                             if (!enabled)
+                                 alsaCheck->setChecked(false);
+                         });
         
         QObject::connect(alsa, &QLineEdit::editingFinished, m_window,
                          [this, alsa]() {
@@ -147,14 +174,13 @@ void FolderSelect::createStartContent(QVBoxLayout *layout)
                                                 alsa);
                          });
         
-        alsaRow->addWidget(alsa);
-        auto *alsaHelp = new QToolButton;
-        alsaHelp->setText("🛈");
-        alsaHelp->setAutoRaise(true);
-        alsaHelp->setCursor(Qt::PointingHandCursor);
-        alsaHelp->setToolTip("Run aplay -L in terminal for listing all ALSA cards.\n used for bypassing the pipewire \n so that it output bitperfect.");
-        alsaHelp->setFixedSize(28, 28);
+        QObject::connect(alsaCheck, &QCheckBox::toggled, m_window,
+                         [this](bool checked) {
+                             m_window->m_settings.saveAlsaEnabled(checked);
+                         });
         
+        alsaRow->addWidget(alsaCheck);
+        alsaRow->addWidget(alsa);
         alsaRow->addWidget(alsaHelp);
         
         audioOptions->addWidget(alsaContainer, 0, Qt::AlignCenter);

@@ -99,6 +99,19 @@ public:
         settings.sync();
     }
     
+    bool alsaEnabled() const
+    {
+        QSettings settings(configPath(), QSettings::IniFormat);
+        return settings.value("alsaEnabled", false).toBool();
+    }
+    
+    void saveAlsaEnabled(bool enabled) const
+    {
+        QSettings settings(configPath(), QSettings::IniFormat);
+        settings.setValue("alsaEnabled", enabled);
+        settings.sync();
+    }
+    
     bool albumArtBlurEnabled() const
     {
         QSettings settings(configPath(), QSettings::IniFormat);
