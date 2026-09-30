@@ -1364,7 +1364,7 @@ bool PlayerPage::initializeMpv()
     
     const QString alsa = m_window->m_settings.alsaCardName().trimmed();
     
-    if (!alsa.isEmpty()) {
+    if (m_window->m_settings.alsaEnabled()) {
         optionResults.append(
             mpv_set_option_string(m_window->m_mpv, "ao", "alsa"));
         
