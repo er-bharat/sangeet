@@ -700,6 +700,12 @@ void PlayerPage::createPlayerControls(QVBoxLayout *root)
     root->addLayout(controls);
 }
 
+void PlayerPage::setProgressBarMode(int mode)
+{
+    if (m_progressStack)
+        m_progressStack->setCurrentIndex(qBound(0, mode, 1));
+}
+
 void PlayerPage::connectPlayerSignals()
 {
     QObject::connect(m_window->m_artWidget, &PlayerArtWidget::trackSelected,
@@ -790,6 +796,11 @@ void PlayerPage::createPlayerPage()
 
 void PlayerPage::setBackgroundArtwork(const QString &path)
 {
+    if (!m_window->m_settings.albumArtBlurEnabled()) {
+        m_background->clear();
+        return;
+    }
+    
     if (path.isEmpty()) {
         m_background->clear();
         return;

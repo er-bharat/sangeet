@@ -1,5 +1,6 @@
 #include "folder_select.h"
 #include "mainwindow.h"
+#include "player.h"
 
 #include <QApplication>
 #include <QFileDialog>
@@ -106,10 +107,25 @@ void FolderSelect::createStartContent(QVBoxLayout *layout)
         
         QObject::connect(waveform, &QCheckBox::toggled, m_window,
                          [this](bool checked) {
-                             m_window->m_settings.saveProgressBarMode(checked ? 1 : 0);
+                             const int mode = checked ? 1 : 0;
+                             m_window->m_settings.saveProgressBarMode(mode);
+                             
+                             if (m_window->m_playerPageController)
+                                 m_window->m_playerPageController->setProgressBarMode(mode);
                          });
         
         audioOptions->addWidget(waveform, 0, Qt::AlignCenter);
+        
+        auto *albumArtBlur = new QCheckBox("Album art blur");
+        albumArtBlur->setChecked(m_window->m_settings.albumArtBlurEnabled());
+        albumArtBlur->setCursor(Qt::PointingHandCursor);
+        
+        QObject::connect(albumArtBlur, &QCheckBox::toggled, m_window,
+                         [this](bool checked) {
+                             m_window->m_settings.saveAlbumArtBlurEnabled(checked);
+                         });
+        
+        audioOptions->addWidget(albumArtBlur, 0, Qt::AlignCenter);
         
         auto *alsaContainer = new QWidget;
         auto *alsaRow = new QHBoxLayout(alsaContainer);

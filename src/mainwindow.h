@@ -99,6 +99,19 @@ public:
         settings.sync();
     }
     
+    bool albumArtBlurEnabled() const
+    {
+        QSettings settings(configPath(), QSettings::IniFormat);
+        return settings.value("albumArtBlur", true).toBool();
+    }
+    
+    void saveAlbumArtBlurEnabled(bool enabled) const
+    {
+        QSettings settings(configPath(), QSettings::IniFormat);
+        settings.setValue("albumArtBlur", enabled);
+        settings.sync();
+    }
+    
     QByteArray eqStateJson() const
     {
         QSettings s(configPath(), QSettings::IniFormat);

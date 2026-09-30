@@ -93,6 +93,7 @@ public:
     void initializeEqualizer();
     void showEqualizer();
     QLabel *m_frequency = nullptr;
+    void setProgressBarMode(int mode);
 
 private:
     void createPlayerHeader(QGridLayout *top);
