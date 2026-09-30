@@ -92,6 +92,7 @@ public:
     QString m_currentLoudnessPath;
     void initializeEqualizer();
     void showEqualizer();
+    QLabel *m_frequency = nullptr;
 
 private:
     void createPlayerHeader(QGridLayout *top);

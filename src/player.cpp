@@ -552,6 +552,13 @@ void PlayerPage::createPlayerHeader(QGridLayout *top)
     layout->addWidget(m_window->m_trackTitle);
     layout->addWidget(m_window->m_trackArtist);
     
+    if (!m_window->m_settings.alsaCardName().trimmed().isEmpty()) {
+        m_frequency = new QLabel;
+        m_frequency->setAlignment(Qt::AlignCenter);
+        m_frequency->setFont(artistFont);
+        layout->addWidget(m_frequency);
+    }
+    
     top->addWidget(center, 0, 1, Qt::AlignCenter);
     
     QFont albumFont = m_window->m_trackTitle->font();
@@ -1016,12 +1023,19 @@ void PlayerPage::playTrack(int index)
     const Track &track = m_window->m_currentAlbum.tracks[index];
     m_currentLoudnessPath = track.path;
     
-    m_window->m_trackTitle->setText(track.title);
+    QString title = track.title;
+    
+    if (!m_window->m_settings.alsaCardName().trimmed().isEmpty() && track.frequency > 0)
+        title += "  " + QString::number(track.frequency / 1000.0, 'f', 1) + " kHz";
+    
+    m_window->m_trackTitle->setText(title);
     m_window->m_trackArtist->setText(track.artist);
+    
     m_window->m_artWidget->setCurrentTrack(
         m_window->m_playbackFromPlaylist
         ? m_window->m_playbackQueueIndex
         : index);
+    
     m_window->m_artWidget->showTrackListTemporarily();
     
     m_window->m_lyricsData = loadLyrics(track.path);
@@ -1327,7 +1341,7 @@ bool PlayerPage::initializeMpv()
     setlocale(LC_NUMERIC, "C");
     m_window->m_mpv = mpv_create();
     if (!m_window->m_mpv) return false;
-    const int optionResults[] = {
+    QList<int> optionResults = {
         mpv_set_option_string(m_window->m_mpv, "vo", "null"),
         mpv_set_option_string(m_window->m_mpv, "force-window", "no"),
         mpv_set_option_string(m_window->m_mpv, "terminal", "no"),
@@ -1336,6 +1350,24 @@ bool PlayerPage::initializeMpv()
         mpv_set_option_string(m_window->m_mpv, "osc", "no"),
         mpv_set_option_string(m_window->m_mpv, "input-default-bindings", "no")
     };
+    
+    const QString alsa = m_window->m_settings.alsaCardName().trimmed();
+    
+    if (!alsa.isEmpty()) {
+        optionResults.append(
+            mpv_set_option_string(m_window->m_mpv, "ao", "alsa"));
+        
+        const QString device =
+        alsa.startsWith("alsa/")
+        ? alsa
+        : "alsa/" + alsa;
+        
+        optionResults.append(
+            mpv_set_option_string(
+                m_window->m_mpv,
+                "audio-device",
+                device.toUtf8().constData()));
+    }
     for (int result : optionResults) {
         if (result < 0) {
             const QString error = QString::fromUtf8(mpv_error_string(result));
