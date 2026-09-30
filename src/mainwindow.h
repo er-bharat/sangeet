@@ -86,6 +86,19 @@ public:
         settings.sync();
     }
     
+    QString alsaCardName() const
+    {
+        QSettings settings(configPath(), QSettings::IniFormat);
+        return settings.value("alsa").toString();
+    }
+    
+    void saveAlsaCardName(const QString &name) const
+    {
+        QSettings settings(configPath(), QSettings::IniFormat);
+        settings.setValue("alsa", name);
+        settings.sync();
+    }
+    
     QByteArray eqStateJson() const
     {
         QSettings s(configPath(), QSettings::IniFormat);

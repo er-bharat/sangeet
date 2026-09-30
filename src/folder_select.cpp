@@ -7,6 +7,10 @@
 #include <QMessageBox>
 #include <QSignalBlocker>
 #include <QIcon>
+#include <QCheckBox>
+#include <QLabel>
+#include <QHBoxLayout>
+#include <QToolTip>
 
 FolderSelect::FolderSelect(MainWindow *window) : m_window(window) {}
 
@@ -92,9 +96,54 @@ void FolderSelect::createStartContent(QVBoxLayout *layout)
 
         createStartChoiceButtons(content);
 
-        m_window->m_rememberFolder = new QCheckBox("Remember folder");
-        m_window->m_rememberFolder->setCursor(Qt::PointingHandCursor);
-        content->addWidget(m_window->m_rememberFolder, 0, Qt::AlignCenter);
+        auto *audioOptions = new QVBoxLayout;
+        audioOptions->setSpacing(8);
+        audioOptions->setAlignment(Qt::AlignCenter);
+        
+        auto *waveform = new QCheckBox("Waveform");
+        waveform->setChecked(m_window->m_settings.progressBarMode() == 1);
+        waveform->setCursor(Qt::PointingHandCursor);
+        
+        QObject::connect(waveform, &QCheckBox::toggled, m_window,
+                         [this](bool checked) {
+                             m_window->m_settings.saveProgressBarMode(checked ? 1 : 0);
+                         });
+        
+        audioOptions->addWidget(waveform, 0, Qt::AlignCenter);
+        
+        auto *alsaContainer = new QWidget;
+        auto *alsaRow = new QHBoxLayout(alsaContainer);
+        alsaRow->setContentsMargins(0, 0, 0, 0);
+        alsaRow->setSpacing(8);
+        
+        auto *alsa = new QLineEdit;
+        alsa->setPlaceholderText("ALSA card name");
+        alsa->setText(m_window->m_settings.alsaCardName());
+        alsa->setFixedWidth(220);
+        
+        QObject::connect(alsa, &QLineEdit::editingFinished, m_window,
+                         [this, alsa]() {
+                             m_window->m_settings.saveAlsaCardName(alsa->text().trimmed());
+                             
+                             QToolTip::showText(
+                                 alsa->mapToGlobal(QPoint(0, alsa->height())),
+                                                "ALSA card saved",
+                                                alsa);
+                         });
+        
+        alsaRow->addWidget(alsa);
+        auto *alsaHelp = new QToolButton;
+        alsaHelp->setText("🛈");
+        alsaHelp->setAutoRaise(true);
+        alsaHelp->setCursor(Qt::PointingHandCursor);
+        alsaHelp->setToolTip("Run aplay -L in terminal for listing all ALSA cards.\n used for bypassing the pipewire \n so that it output bitperfect.");
+        alsaHelp->setFixedSize(28, 28);
+        
+        alsaRow->addWidget(alsaHelp);
+        
+        audioOptions->addWidget(alsaContainer, 0, Qt::AlignCenter);
+        
+        content->addLayout(audioOptions);
         layout->addLayout(content, 1);
     }
 
