@@ -177,6 +177,9 @@ void FolderSelect::createStartContent(QVBoxLayout *layout)
         QObject::connect(alsaCheck, &QCheckBox::toggled, m_window,
                          [this](bool checked) {
                              m_window->m_settings.saveAlsaEnabled(checked);
+                             
+                             if (m_window->m_playerPageController)
+                                 m_window->m_playerPageController->restartMpv();
                          });
         
         alsaRow->addWidget(alsaCheck);
