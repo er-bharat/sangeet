@@ -1,10 +1,11 @@
 # Sangeet
-Music player for local files. Album & Playlist driven design listen to whole instead of hunting for 
+**bitperfect** Music player for local files. Album & Playlist driven design listen to whole instead of hunting for 
 next song so no mini player.  
 Uses sql database creation and lazy loading so handles large local libraries excellently.  
-Inspired by KDE's Elisa mp (not a fork), but uses libmpv instead of libvlc which is much more reliable.
+Inspired by KDE's ***Elisa*** mp (not a fork), but uses ***libmpv*** instead of libvlc which is much more reliable.
+and --***equalizer***-- for dsp
 
-strawberry has a feature called moodbar which i liked from aimp age but strawberry ui is dated, and
+***strawberry*** has a feature called moodbar which i liked from aimp age but strawberry ui is dated, and
 i wanted something modern looking so i implemented waveform progressbar in it.  
 TBH this was the sole reason i wrote this new music player.  
 
@@ -16,6 +17,7 @@ TBH this was the sole reason i wrote this new music player.
 
 
 ## Features
++ bitperfect audio through alsa soundcard output on linux(optional).
 + lazy load and sql db makes it near instant start even on first load.
 + can open file from file manager auto gets all the album songs to in same player view.
 + dropping a file or folder makes that folder the temp main source.
@@ -27,3 +29,18 @@ TBH this was the sole reason i wrote this new music player.
 + have m3u/m3u8 playlists support also creation and editing tools.
 + through m3u playlists also support network streams added manually in m3u file.
 + tracks have multiple sorting method.
++ a wireform equalizer for dsp.
+## build
+in project home dir make a build folder and switch to it.  
+`mkdir build ; cd build ;`  
+configure the project, install any dependency missing.  
+`cmake -DCMAKE_BUILD_TYPE=Release`  
+build the binary, use it loccally if you want by setting it up in .local  
+`make`  
+if want to install it system wide in `/usr/local/`  
+`sudo make install`  
+
+## Distro install
+working on it.
+## LICENSE
+This project is licensed under gpl3.0
