@@ -226,8 +226,8 @@ void Albums::createAlbumsPage()
     m_window->m_searchButton = m_window->m_folderSelect->createSearchButton(m_window->m_search);
     topLayout->addWidget(m_window->m_searchButton);
 
-    auto *homeButton = m_window->m_folderSelect->createHomeButton();
-    topLayout->addWidget(homeButton);
+    auto *settingsButton = m_window->m_folderSelect->createSettings();
+    topLayout->addWidget(settingsButton);
     mainLayout->addLayout(topLayout);
 
     m_window->m_scrollArea = new QScrollArea;

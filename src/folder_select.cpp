@@ -168,7 +168,7 @@ void FolderSelect::createStartPage()
 
         auto *topBar = new QHBoxLayout;
         topBar->addStretch();
-        topBar->addWidget(m_window->m_folderSelect->createStartHomeButton());
+        topBar->addWidget(m_window->m_folderSelect->createStartSettings());
         layout->addLayout(topBar);
 
         createStartContent(layout);
@@ -192,9 +192,9 @@ void FolderSelect::goToRememberedFolder()
         
     }
 
-QToolButton *FolderSelect::createStartHomeButton()
+QToolButton *FolderSelect::createStartSettings()
     {
-            auto *button = m_window->m_folderSelect->createHomeButton();
+            auto *button = m_window->m_folderSelect->createSettings();
             button->setToolTip(QStringLiteral("Back to remembered folder"));
             QObject::connect(button, &QToolButton::clicked, m_window, [this]() { m_window->m_folderSelect->goToRememberedFolder(); });
             return button;
@@ -252,26 +252,29 @@ QToolButton *FolderSelect::createSearchButton(QLineEdit *edit)
         
     }
 
-QToolButton *FolderSelect::createHomeButton()
+    QToolButton *FolderSelect::createSettings()
     {
-            auto *button = new QToolButton;
-            const QIcon icon = QIcon::fromTheme(QStringLiteral("go-home"),
-                                                 QIcon::fromTheme(QStringLiteral("user-home")));
-            if (!icon.isNull()) {
-                button->setIcon(icon);
-                button->setToolButtonStyle(Qt::ToolButtonIconOnly);
-            } else {
-                button->setText(QStringLiteral("⌂"));
-                button->setToolButtonStyle(Qt::ToolButtonTextOnly);
-            }
-            button->setIconSize(QSize(22, 22));
-            button->setAutoRaise(true);
-            button->setCursor(Qt::PointingHandCursor);
-            button->setToolTip(QStringLiteral("Home"));
-            button->setFixedSize(40, 40);
-            QObject::connect(button, &QToolButton::clicked, m_window, [this]() { m_window->m_folderSelect->goHome(); });
-            return button;
+        auto *button = new QToolButton;
+        const QIcon icon = QIcon::fromTheme(QStringLiteral("settings"));
         
+        if (!icon.isNull()) {
+            button->setIcon(icon);
+            button->setToolButtonStyle(Qt::ToolButtonIconOnly);
+        } else {
+            button->setText(QStringLiteral("⚙"));
+            button->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        }
+        
+        button->setIconSize(QSize(22, 22));
+        button->setAutoRaise(true);
+        button->setCursor(Qt::PointingHandCursor);
+        button->setToolTip(QStringLiteral("Settings"));
+        button->setFixedSize(40, 40);
+        
+        QObject::connect(button, &QToolButton::clicked, m_window,
+                         [this]() { m_window->m_folderSelect->goHome(); });
+        
+        return button;
     }
 
 void FolderSelect::restoreRememberedFolder()

@@ -41,8 +41,8 @@ void Tracks::createTracksPage()
     m_window->m_createPlaylistButton = new QPushButton("+ Playlist");
     top->addWidget(m_window->m_createPlaylistButton);
 
-    auto *homeButton = m_window->m_folderSelect->createHomeButton();
-    top->addWidget(homeButton);
+    auto *settingsButton = m_window->m_folderSelect->createSettings();
+    top->addWidget(settingsButton);
     layout->addLayout(top);
 
     m_window->m_tracksTable = new QTableView;

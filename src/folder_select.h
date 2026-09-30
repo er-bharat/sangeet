@@ -19,10 +19,10 @@ public:
     void createStartPage();
     void goHome();
     void goToRememberedFolder();
-    QToolButton *createStartHomeButton();
+    QToolButton *createStartSettings();
     void collapseSearch(QLineEdit *edit);
     QToolButton *createSearchButton(QLineEdit *edit);
-    QToolButton *createHomeButton();
+    QToolButton *createSettings();
     void restoreRememberedFolder();
     void openPath(const QString &path);
     void chooseFolder();

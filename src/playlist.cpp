@@ -691,7 +691,7 @@ void Playlists::createPlaylistsPage()
     topLayout->addWidget(m_window->m_playlistsSearch);
     m_window->m_playlistsSearchButton = m_window->m_folderSelect->createSearchButton(m_window->m_playlistsSearch);
     topLayout->addWidget(m_window->m_playlistsSearchButton);
-    topLayout->addWidget(m_window->m_folderSelect->createHomeButton());
+    topLayout->addWidget(m_window->m_folderSelect->createSettings());
     mainLayout->addLayout(topLayout);
 
     m_window->m_playlistsScroll = new QScrollArea;
